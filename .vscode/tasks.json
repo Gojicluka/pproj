@@ -1,0 +1,64 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "delete lexer",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "workspace/MJCompiler/src/rs/ac/bg/etf/pp1/Yylex.java"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "java lexer",
+            "type": "shell",
+            "command": "java",
+            "args": [
+                "-jar",
+                "workspace/MJCompiler/lib/JFlex.jar",
+                "-d",
+                "workspace/MJCompiler/src/rs/ac/bg/etf/pp1",
+                "workspace/MJCompiler/spec/mjlexer.flex"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": "delete lexer",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+        ,
+        {
+            "label": "java parser",
+            "type": "shell",
+            "command": "java",
+            "args": [
+                "-jar",
+                "workspace/MJCompiler/lib/cup_v10k.jar",
+                "-destdir",
+                "workspace/MJCompiler/src/rs/ac/bg/etf/pp1",
+                "-parser",
+                "MJParser",
+                "-symbols",
+                "sym",
+                "workspace/MJCompiler/spec/mjparser.cup"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

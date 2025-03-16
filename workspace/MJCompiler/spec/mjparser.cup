@@ -54,12 +54,14 @@ scan with {:
 :}
 
 
-terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, COMMA, PRINT, RETURN, PLUS, EQUAL, VOID;
+terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, COMMA, PRINT, RETURN, PLUS, EQUAL, VOID, CONST, ASSIGN;
 terminal Integer NUMBER ;
 terminal String IDENT ;
+terminal Boolean BOOL ;
+terminal Character CHARACTER ;
 terminal IF, ELSE;
 
-nonterminal MethodDeclList, VarDecl;
+nonterminal MethodDeclList, Constant, VarDecl, VarDeclMore, VarDeclarations;
 nonterminal FormalParamList, FormalParamDecl, FormPars, ActualPars, ActualParamList; 
 nonterminal StatementList, Statement, Addop;
 nonterminal Unmatched, Matched;
@@ -73,12 +75,28 @@ Program ::= (Program) PROG ProgName:p VarDeclList LBRACE MethodDeclList RBRACE
 ProgName ::= (ProgName) IDENT:pName 
 ;
 
-VarDeclList ::= (VarDeclarations) VarDeclList VarDecl  
+VarDeclList ::= (VarDeclarations) VarDeclList VarDeclarations
+				|
+				(ConstDeclarations) VarDeclList CONST VarDeclarations
 				|
 				(NoVarDecl)/* epsilon */ 
 				;
-				
-VarDecl ::= (VarDecl) Type:varType IDENT:varName SEMI 
+
+VarDeclarations ::= (VarDeclarations) Type:varType VarDecl VarDeclMore SEMI 
+;
+
+VarDeclMore ::= (VarDeclMore_comma) COMMA  VarDecl VarDeclMore
+				|
+				(VarDeclMore_e) /* epsilon */
+				;
+
+VarDecl ::= (VarDecl) IDENT ASSIGN Constant ; 
+
+Constant ::= (Constant_number) NUMBER
+			|
+			(Constant_character) CHARACTER
+			|
+			(Constant_boolean) BOOL
 ;
 
 Type ::= (Type) IDENT:typeName 

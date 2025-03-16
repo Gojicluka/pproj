@@ -4,14 +4,15 @@
         {
             "label": "delete lexer",
             "type": "shell",
-            "command": "rm",
+            "command": "cmd",
             "args": [
-                "workspace/MJCompiler/src/rs/ac/bg/etf/pp1/Yylex.java"
+            "/C",
+            "if exist workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java del workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java"
             ],
             "group": "build",
             "presentation": {
-                "reveal": "always",
-                "panel": "new"
+            "reveal": "always",
+            "panel": "new"
             },
             "problemMatcher": []
         },

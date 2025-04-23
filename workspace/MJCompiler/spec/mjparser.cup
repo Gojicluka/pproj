@@ -67,12 +67,31 @@ nonterminal MethodDeclList, Constant, VarDecl, VarDeclMore, VarDeclarations;
 nonterminal FormalParamList, FormalParamDecl, FormPars, ActualPars, ActualParamList; 
 nonterminal StatementList, Statement, Addop;
 nonterminal Unmatched, Matched;
+nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
+nonterminal MethodSigniture;
+nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgName, Designator, MethodDecl, MethodTypeName; 
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
 
-Program ::= (Program) PROG ProgName:p VarDeclList LBRACE MethodDeclList RBRACE 
+
+precedence left PLUS, MINUS;
+precedence left MUL, DIV, MOD;
+
+
+Program ::= (Program) PROG IDENT:programName ProgramDecl LBRACE MethodDeclList RBRACE 
 ;
+
+ProgramDecl ::= (ProgramDecl_Const) ProgramDecl Constant
+                |
+                (ProgramDecl_var) ProgramDecl VarDecl
+                |
+                (PgoramDecl_class) ProgramDecl ClassDecl
+                |
+                (ProgramDecl_interface) ProgramDecl InterfaceDecl
+                |
+                (ProgramDecl_epsilon) /* epsilon */
+                ;
 
 ProgName ::= (ProgName) IDENT:pName 
 ;
@@ -109,21 +128,30 @@ MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
                     (NoMethodDecl)/* epsilon */
                     ;
 
-MethodDecl ::= (MethodDecl) MethodTypeName
-               LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE 
-               ;
+MethodDecl ::= (MethodDecl) MethodSigniture VarDeclList LBRACE StatementList RBRACE;
 
 MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName
 ;
 
-FormPars ::= (FormParams) FormalParamList | (NoFormParam) /* epsilon */ ;
+MethodSigniture ::= (MethodSigniture_Type_FormPars) Type IDENT LPAREN FormPars RPAREN
+                    |
+                    (MethodSigniture_Void_FormPars) VOID IDENT LPAREN FormPars RPAREN
+;
+
+
+FormPars ::= (FormParams) FormalParamList 
+            | 
+            (NoFormParam) /* epsilon */ ;
 
 FormalParamList ::= (FormalParamDecls) FormalParamList COMMA FormalParamDecl
                     |
                     (SingleFormalParamDecl) FormalParamDecl
                     ;
                     
-FormalParamDecl ::= (FormalParamDecl) Type IDENT ;
+FormalParamDecl ::= (FormalParamDecl) Type IDENT 
+                    |
+                    (FormalParamDecl_brakcet) Type IDENT LBRACKET RBRACKET
+                    ;
 
 StatementList ::= (Statements) StatementList Statement 
                     |
@@ -132,38 +160,109 @@ StatementList ::= (Statements) StatementList Statement
 
 Statement ::= (MatchedStmt) Matched | (UnmachedStmt) Unmatched ;
 
-Unmatched ::= (UnmatchedIf) IF Expr Statement | (UnmatchedIfElse) IF Expr Matched ELSE Unmatched;
+Unmatched ::=   (UnmatchedIf) IF LPAREN Condition RPAREN Statement 
+                | 
+                (UnmatchedIfElse) IF LPAREN Condition RPAREN Matched ELSE Unmatched;
     
                   
-Matched ::= (Assignment) Designator:dest EQUAL Expr:e SEMI 
-              |
-              (ErrAssignment) Designator EQUAL error SEMI
+Matched ::= (ErrAssignment) Designator EQUAL error SEMI
               {: parser.log.debug("Uspesan oporavak od greske pri dodeli vrednosti."); :}
-              |
-              (PrintStmt) PRINT LPAREN Expr RPAREN SEMI 
               |
               (ReturnExpr) RETURN Expr:t SEMI
               |
               (ReturnNoExpr) RETURN SEMI
               | 
-              (MatchedIf) IF Expr Matched ELSE Matched
+              (ContinueExpr) CONTINUE SEMI
               |
-              (ProcCall) Designator:func LPAREN ActualPars RPAREN SEMI
-              ;
-              
-Expr ::= (AddExpr) Expr:te Addop Term:t
-         |
-         (TermExpr) Term:t
-         ;
+              (BreakStmt) BREAK SEMI
+              |
+              (ReadStmt) READ LPAREN Designator RPAREN SEMI
+              | 
+              (PrintStmt_1) PRINT LPAREN Expr RPAREN SEMI
+              |
+              (PrintStmt_2) PRINT LPAREN Expr COMMA NUMBER RPAREN SEMI
+              |
+              (DesignatorStmt) DesignatorStatement SEMI
+              | 
+              (BraceStmt) LBRACE Statement RBRACE
+              |
+              (DoWhileStmt_1) DO Statement WHILE LPAREN RPAREN SEMI
+              |
+              (DoWhileStmt_2) DO Statement WHILE LPAREN Condition RPAREN SEMI
+              |
+              (DoWhileStmt_3) DO Statement WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
+              |
+              (MatchedIf) IF LPAREN Condition RPAREN Matched ELSE Matched
+            ;
 
-Term ::= (Term) Factor:t 
+
+DesignatorStatement ::= (DesignatorStatement_des1) Designator Assignop Designator Setop Designator
+                    |
+                    (DesignatorStatement_des2) Designator Assignop Expr
+                    |
+                    (DesignatorStatement_des3) Designator LPAREN ActPars RPAREN
+                    |
+                    (DesignatorStatement_des4) Designator INCREMENT
+                    |
+                    (DesignatorStatement_des5) Designator DECREMENT
 ;
 
-Factor ::= (Const) NUMBER
+ActPars ::= (ActPars_base) Expr
             |
-           (Var) Designator:d
+            (ActPars_rec) ActPars COMMA Expr
+            ;
+
+Condition ::= (Condition_base) CondTerm
             |
-           (FuncCall) Designator:func LPAREN ActualPars RPAREN
+            (Condition_rec) Condition OR CondTerm
+;
+
+CondTerm ::= (CondTerm_base) CondFact
+            |
+            (CondTerm_rec) CondTerm AND CondFact
+;
+
+CondFact ::= (CondFact_Expr) Expr
+            |
+            (CondFact_Expr_relop) Expr Relop Expr
+        ;
+
+
+Expr ::= (UnaryMinusExpr) MINUS Term:t AddopTermList
+       |
+       (TermExpr) Term:t AddopTermList
+       |
+       (MapExpr) Designator:source MAP Designator:target
+       ;
+
+
+AddopTermList ::= (AddopTermList_base) AddopTermList Addop Term
+                |
+                (AddopTermList_epsilon) /* epsilon */
+                ;
+
+AddopTerm ::= (AddopTerm_base) Addop Term
+            |
+            (AddopTerm_epsilon) /* epsilon */
+;
+
+Term ::=  (Term_factor) Factor:t
+        |
+        (Term_mulop) Term Mulop Factor
+;
+
+
+Factor ::= (Factor_const) Constant
+            |
+           (Factor_var) Designator:d
+            |
+           (Factor_funccall) Designator:func LPAREN ActualPars RPAREN
+            |
+           (Factor_NewType_Epxr) NEW Type LBRACKET Expr RBRACKET
+           |
+           (Factor_NewType_ActualPars) NEW Type LPAREN ActualPars RPAREN
+           |
+           (Factor_Expr) LPAREN Expr RPAREN
            ;
 
 ActualPars ::= (Actuals) ActualParamList 
@@ -176,7 +275,60 @@ ActualParamList ::= (ActualParams) ActualParamList COMMA Expr
                     (ActualParam) Expr
                     ;
 
-Designator ::= (Designator) IDENT:name
-;
+Designator ::= (SimpleDesignator) IDENT:name
+             | (FieldAccess) Designator DOT IDENT:field
+             | (ArrayAccess) Designator LBRACKET Expr:index RBRACKET
+             ;
 
-Addop ::= (Addop) PLUS ;
+Label ::= (Label) IDENT ;
+
+Assignop ::= (Assignop) ASSIGN ;
+
+Relop ::= (Relop_EQUALS) EQUALS 
+        |
+        (Relop_NOT_EQUALS) NOT_EQUALS
+        |
+        (Relop_GREATER) GREATER
+        |
+        (Relop_GREATER_EQUALS) GREATER_EQUALS
+        |
+        (Relop_LESS) LESS
+        |
+        (Relop_LESS_EQUALS) LESS_EQUALS
+        ;
+
+Addop ::= (Addop_PLUS) PLUS
+        |
+        (Addop_MINUS) MINUS
+        ;
+
+Mulop ::= (Mulop_MUL) MUL 
+        |
+        (Mulop_DIV) DIV 
+        |
+        (Mulop_MOD) MOD 
+        ; 
+
+Setop ::= (Setop) UNION ;
+
+
+
+ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclList RBRACE
+              |
+              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclList 
+                    LBRACE MethodDeclList RBRACE RBRACE
+            ;
+
+ExtendsType ::= (ExtendsType) EXTENDS Type
+                |
+                (ExtendsType_epsilon) /* epsilon */
+                ;
+
+InterfaceDecl ::= (InterfaceDecl_base) INTERFACE IDENT LBRACE InterfaceMethodList RBRACE;
+
+InterfaceMethodList ::= (InterfaceMethodList_methodSigniture) InterfaceMethodList MethodSigniture SEMI
+                        |
+                        (InterfaceMethodList_MethodDecl) InterfaceMethodList MethodDecl
+                        |
+                        (InterfaceMethodList_epsilon) /* epsilon*/
+                        ;

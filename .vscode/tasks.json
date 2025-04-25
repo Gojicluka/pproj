@@ -6,13 +6,13 @@
             "type": "shell",
             "command": "cmd",
             "args": [
-            "/C",
-            "if exist workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java del workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java"
+                "/C",
+                "if exist workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java del workspace\\MJCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\Yylex.java"
             ],
             "group": "build",
             "presentation": {
-            "reveal": "always",
-            "panel": "new"
+                "reveal": "always",
+                "panel": "new"
             },
             "problemMatcher": []
         },
@@ -37,8 +37,7 @@
                 "panel": "new"
             },
             "problemMatcher": []
-        }
-        ,
+        },
         {
             "label": "java parser",
             "type": "shell",
@@ -46,6 +45,8 @@
             "args": [
                 "-jar",
                 "workspace/MJCompiler/lib/cup_v10k.jar",
+                "-ast",
+                "workspace.MjCompiler.src.rs.ac.bg.etf.pp1.ast",
                 "-destdir",
                 "workspace/MJCompiler/src/rs/ac/bg/etf/pp1",
                 "-parser",
@@ -54,6 +55,32 @@
                 "sym",
                 "workspace/MJCompiler/spec/mjparser.cup"
             ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Repackage Java AST files",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Get-ChildItem -Recurse \"workspace\\MjCompiler\\src\\rs\\ac\\bg\\etf\\pp1\\ast\" -Filter *.java | ForEach-Object { $src = $_.FullName; $content = Get-Content -Raw -Path $src; $newContent = $content -replace \\\"package workspace\\.MjCompiler\\.src\\.rs\\.ac\\.bg\\.etf\\.pp1\\.ast;\\\", \\\"package rs.ac.bg.etf.pp1.ast;\\\"; $targetPath = $src -replace \\\"workspace\\\\\\\\MjCompiler\\\", \\\"ast\\\"; New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($targetPath)) | Out-Null; Set-Content -Path $targetPath -Value $newContent; }"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "run all",
+            "type": "shell",
+            "dependsOn": ["java parser", "Repackage Java AST files"],
             "group": "build",
             "presentation": {
                 "reveal": "always",

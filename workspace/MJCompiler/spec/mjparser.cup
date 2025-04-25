@@ -63,13 +63,14 @@ terminal NOT_EQUALS, GREATER, GREATER_EQUALS, LESS, LESS_EQUALS, AND, OR, INCREM
 terminal CONTINUE, BREAK, CLASS, DO, EXTENDS, INTERFACE, MAP, NEW, READ, UNION, WHILE;
 terminal CHAR, MINUS, DIV, EQUALS, MOD, MUL;
 
-nonterminal MethodDeclList, Constant, VarDecl, VarDeclMore, VarDeclarations;
+nonterminal MethodDeclList, Constant, VarDecl, VarDeclMore;
 nonterminal FormalParamList, FormalParamDecl, FormPars, ActualPars, ActualParamList; 
 nonterminal StatementList, Statement, Addop;
 nonterminal Unmatched, Matched;
 nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
 nonterminal MethodSigniture;
-nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl;
+nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList;
+nonterminal VarDeclarations;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgName, Designator, MethodDecl, MethodTypeName; 
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
@@ -79,10 +80,10 @@ precedence left PLUS, MINUS;
 precedence left MUL, DIV, MOD;
 
 
-Program ::= (Program) PROG IDENT:programName ProgramDecl LBRACE MethodDeclList RBRACE 
+Program ::= (Program_base) PROG IDENT:programName ProgramDecl LBRACE MethodDeclList RBRACE 
 ;
 
-ProgramDecl ::= (ProgramDecl_Const) ProgramDecl Constant
+ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDecl
                 |
                 (ProgramDecl_var) ProgramDecl VarDecl
                 |
@@ -93,25 +94,33 @@ ProgramDecl ::= (ProgramDecl_Const) ProgramDecl Constant
                 (ProgramDecl_epsilon) /* epsilon */
                 ;
 
-ProgName ::= (ProgName) IDENT:pName 
+ProgName ::= (ProgName_base) IDENT:pName 
 ;
 
-VarDeclList ::= (VarDeclarations) VarDeclList VarDeclarations
-                |
-                (ConstDeclarations) VarDeclList CONST VarDeclarations
-                |
-                (NoVarDecl)/* epsilon */ 
-                ;
-
-VarDeclarations ::= (VarDeclarations) Type:varType VarDecl VarDeclMore SEMI 
+VarDecl ::= (VarDecl_base) Type IDENT VarDeclList SEMI
+            |
+            (VarDecl_brackets) Type IDENT LBRACKET RBRACKET VarDeclList SEMI
 ;
 
-VarDeclMore ::= (VarDeclMore_comma) COMMA  VarDecl VarDeclMore
+VarDeclList ::= (VarDeclList_base) VarDeclList COMMA IDENT
                 |
-                (VarDeclMore_e) /* epsilon */
-                ;
+                (VarDeclList_bracket) VarDeclList COMMA IDENT LBRACKET RBRACKET
+                |
+                (VarDeclList_epsilon) /* epsilon */
+;
 
-VarDecl ::= (VarDecl) IDENT ASSIGN Constant ; 
+VarDeclarations ::= (VarDeclarations_base) VarDeclarations VarDecl
+                    |
+                    (VarDeclarations_epsilon) /* epsilon */
+                    ;
+
+
+ConstDecl ::= (ConstDecl_base) CONST Type IDENT EQUAL Constant ConstDeclList SEMI;
+
+ConstDeclList ::= (ConstDeclList_base) COMMA IDENT EQUAL Constant
+                |
+                (ConstDeclList_epsilon) /* epsilon */
+;
 
 Constant ::= (Constant_number) NUMBER
             |
@@ -128,7 +137,7 @@ MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
                     (NoMethodDecl)/* epsilon */
                     ;
 
-MethodDecl ::= (MethodDecl) MethodSigniture VarDeclList LBRACE StatementList RBRACE;
+MethodDecl ::= (MethodDecl) MethodSigniture VarDeclarations LBRACE StatementList RBRACE;
 
 MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName
 ;
@@ -148,7 +157,7 @@ FormalParamList ::= (FormalParamDecls) FormalParamList COMMA FormalParamDecl
                     (SingleFormalParamDecl) FormalParamDecl
                     ;
                     
-FormalParamDecl ::= (FormalParamDecl) Type IDENT 
+FormalParamDecl ::= (FormalParamDecl_base) Type IDENT 
                     |
                     (FormalParamDecl_brakcet) Type IDENT LBRACKET RBRACKET
                     ;
@@ -282,7 +291,7 @@ Designator ::= (SimpleDesignator) IDENT:name
 
 Label ::= (Label) IDENT ;
 
-Assignop ::= (Assignop) ASSIGN ;
+Assignop ::= (Assignop) EQUAL ;
 
 Relop ::= (Relop_EQUALS) EQUALS 
         |
@@ -313,13 +322,13 @@ Setop ::= (Setop) UNION ;
 
 
 
-ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclList RBRACE
+ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclarations RBRACE
               |
-              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclList 
+              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclarations
                     LBRACE MethodDeclList RBRACE RBRACE
             ;
 
-ExtendsType ::= (ExtendsType) EXTENDS Type
+ExtendsType ::= (ExtendsType_base) EXTENDS Type
                 |
                 (ExtendsType_epsilon) /* epsilon */
                 ;

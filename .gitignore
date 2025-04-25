@@ -2,3 +2,4 @@ workspace/.metadata
 logs
 workspace/.recommenders
 workspace/MJCompiler/bin
+workspace/MJCompiler/src/rs/ac/bg/etf/pp1/ast

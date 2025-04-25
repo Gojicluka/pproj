@@ -124,7 +124,7 @@ ConstDeclList ::= (ConstDeclList_base) COMMA IDENT EQUAL Constant
 
 Constant ::= (Constant_number) NUMBER
             |
-            (Constant_character) CHARACTER
+            (Constant_character) CHAR
             |
             (Constant_boolean) BOOL
 ;
@@ -193,7 +193,7 @@ Matched ::= (ErrAssignment) Designator EQUAL error SEMI
               |
               (DesignatorStmt) DesignatorStatement SEMI
               | 
-              (BraceStmt) LBRACE Statement RBRACE
+              (BraceStmt) LBRACE StatementList RBRACE
               |
               (DoWhileStmt_1) DO Statement WHILE LPAREN RPAREN SEMI
               |
@@ -210,6 +210,8 @@ DesignatorStatement ::= (DesignatorStatement_des1) Designator Assignop Designato
                     (DesignatorStatement_des2) Designator Assignop Expr
                     |
                     (DesignatorStatement_des3) Designator LPAREN ActPars RPAREN
+                    |
+                    (DesignatorStatement_zagrade) Designator LPAREN RPAREN
                     |
                     (DesignatorStatement_des4) Designator INCREMENT
                     |

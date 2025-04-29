@@ -53,6 +53,7 @@
                 "MJParser",
                 "-symbols",
                 "sym",
+                "-buildtree",
                 "workspace/MJCompiler/spec/mjparser.cup"
             ],
             "group": "build",

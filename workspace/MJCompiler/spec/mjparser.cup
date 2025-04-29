@@ -70,17 +70,23 @@ nonterminal Unmatched, Matched;
 nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
 nonterminal MethodSigniture;
 nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList;
-nonterminal VarDeclarations;
+nonterminal VarDeclarations, ProgramName;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgName, Designator, MethodDecl, MethodTypeName; 
+nonterminal Program Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Designator, MethodDecl, MethodTypeName; 
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
 
 
 precedence left PLUS, MINUS;
 precedence left MUL, DIV, MOD;
 
+start with Program;
 
-Program ::= (Program_base) PROG IDENT:programName ProgramDecl LBRACE MethodDeclList RBRACE 
+Program ::= (Program) PROG ProgramName ProgramDecl LBRACE MethodDeclList RBRACE
+;
+
+
+ProgramName ::= (ProgramName) IDENT
 ;
 
 ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDecl
@@ -94,8 +100,6 @@ ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDecl
                 (ProgramDecl_epsilon) /* epsilon */
                 ;
 
-ProgName ::= (ProgName_base) IDENT:pName 
-;
 
 VarDecl ::= (VarDecl_base) Type IDENT VarDeclList SEMI
             |
@@ -175,7 +179,6 @@ Unmatched ::=   (UnmatchedIf) IF LPAREN Condition RPAREN Statement
     
                   
 Matched ::= (ErrAssignment) Designator EQUAL error SEMI
-              {: parser.log.debug("Uspesan oporavak od greske pri dodeli vrednosti."); :}
               |
               (ReturnExpr) RETURN Expr:t SEMI
               |

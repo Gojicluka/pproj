@@ -56,12 +56,12 @@ terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, COMMA, PRINT, RETURN, PLUS,
 terminal Integer NUMBER;
 terminal String IDENT;
 terminal Boolean BOOL;
-terminal Character CHARACTER;
+terminal Character CHAR;
 terminal IF, ELSE;
 
 terminal NOT_EQUALS, GREATER, GREATER_EQUALS, LESS, LESS_EQUALS, AND, OR, INCREMENT, DECREMENT, COLON, DOT, LBRACKET, RBRACKET;
 terminal CONTINUE, BREAK, CLASS, DO, EXTENDS, INTERFACE, MAP, NEW, READ, UNION, WHILE;
-terminal CHAR, MINUS, DIV, EQUALS, MOD, MUL;
+terminal MINUS, DIV, EQUALS, MOD, MUL;
 
 nonterminal MethodDeclList, Constant, VarDecl, VarDeclMore;
 nonterminal FormalParamList, FormalParamDecl, FormPars, ActualPars, ActualParamList; 
@@ -69,8 +69,8 @@ nonterminal StatementList, Statement, Addop;
 nonterminal Unmatched, Matched;
 nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
 nonterminal MethodSigniture;
-nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList;
-nonterminal VarDeclarations, ProgramName;
+nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList, ConstDeclMore;
+nonterminal VarDeclListOptional, ProgramName;
 
 nonterminal Program Program;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Designator, MethodDecl, MethodTypeName; 
@@ -89,7 +89,7 @@ Program ::= (Program) PROG ProgramName ProgramDecl LBRACE MethodDeclList RBRACE
 ProgramName ::= (ProgramName) IDENT
 ;
 
-ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDecl
+ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDeclList
                 |
                 (ProgramDecl_var) ProgramDecl VarDecl
                 |
@@ -100,30 +100,33 @@ ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDecl
                 (ProgramDecl_epsilon) /* epsilon */
                 ;
 
+VarDeclListOptional ::= (VarDeclListOptional_list) VarDeclList
+                        |
+                        (VarDeclListOptional_epsilon) /* epsilon */
+;
 
-VarDecl ::= (VarDecl_base) Type IDENT VarDeclList SEMI
+VarDeclList ::= (VarDeclList) Type VarDecl VarDeclMore SEMI;
+
+VarDecl ::= (VarDecl_regular) IDENT 
             |
-            (VarDecl_brackets) Type IDENT LBRACKET RBRACKET VarDeclList SEMI
+            (VarDecl_array) IDENT LBRACKET RBRACKET
 ;
 
-VarDeclList ::= (VarDeclList_base) VarDeclList COMMA IDENT
+VarDeclMore ::= (VarDeclMore_comma) COMMA VarDecl VarDeclMore
                 |
-                (VarDeclList_bracket) VarDeclList COMMA IDENT LBRACKET RBRACKET
-                |
-                (VarDeclList_epsilon) /* epsilon */
+                (VarDeclMore_e) /* epsilon */
 ;
 
-VarDeclarations ::= (VarDeclarations_base) VarDeclarations VarDecl
-                    |
-                    (VarDeclarations_epsilon) /* epsilon */
-                    ;
 
 
-ConstDecl ::= (ConstDecl_base) CONST Type IDENT EQUAL Constant ConstDeclList SEMI;
 
-ConstDeclList ::= (ConstDeclList_base) COMMA IDENT EQUAL Constant
+ConstDeclList ::= (ConstDeclList) CONST Type ConstDecl ConstDeclMore SEMI;
+
+ConstDecl ::= (ConstDecl) IDENT EQUAL Constant;
+
+ConstDeclMore ::= (ConstDeclMore_base) COMMA ConstDecl ConstDeclMore
                 |
-                (ConstDeclList_epsilon) /* epsilon */
+                (ConstDeclMore_epsilon) /* epsilon */
 ;
 
 Constant ::= (Constant_number) NUMBER
@@ -141,14 +144,14 @@ MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
                     (NoMethodDecl)/* epsilon */
                     ;
 
-MethodDecl ::= (MethodDecl) MethodSigniture VarDeclarations LBRACE StatementList RBRACE;
+MethodDecl ::= (MethodDecl) MethodSigniture VarDeclListOptional LBRACE StatementList RBRACE;
 
 MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName
 ;
 
-MethodSigniture ::= (MethodSigniture_Type_FormPars) Type IDENT LPAREN FormPars RPAREN
+MethodSigniture ::= (MethodSigniture_Type) Type IDENT LPAREN FormPars RPAREN
                     |
-                    (MethodSigniture_Void_FormPars) VOID IDENT LPAREN FormPars RPAREN
+                    (MethodSigniture_Void) VOID IDENT LPAREN FormPars RPAREN
 ;
 
 
@@ -327,9 +330,9 @@ Setop ::= (Setop) UNION ;
 
 
 
-ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclarations RBRACE
+ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclListOptional RBRACE
               |
-              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclarations
+              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclListOptional
                     LBRACE MethodDeclList RBRACE RBRACE
             ;
 

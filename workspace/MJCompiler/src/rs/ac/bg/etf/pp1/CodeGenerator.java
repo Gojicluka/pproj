@@ -79,40 +79,40 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.return_);
 	}
 	
-	@Override
-	public void visit(Assignment Assignment) {
-		Code.store(Assignment.getDesignator().obj);
-	}
+	// @Override
+	// public void visit(Assignment Assignment) {
+	// 	Code.store(Assignment.getDesignator().obj);
+	// }
 	
-	@Override
-	public void visit(Const Const) {
-		Code.load(new Obj(Obj.Con, "$", Const.struct, Const.getN1(), 0));
-	}
+	// @Override
+	// public void visit(Const Const) {
+	// 	Code.load(new Obj(Obj.Con, "$", Const.struct, Const.getN1(), 0));
+	// }
 	
-	@Override
-	public void visit(Designator Designator) {
-		SyntaxNode parent = Designator.getParent();
-		if (Assignment.class != parent.getClass() && FuncCall.class != parent.getClass()) {
-			Code.load(Designator.obj);
-		}
-	}
+	// @Override
+	// public void visit(Designator Designator) {
+	// 	SyntaxNode parent = Designator.getParent();
+	// 	if (Assignment.class != parent.getClass() && FuncCall.class != parent.getClass()) {
+	// 		Code.load(Designator.obj);
+	// 	}
+	// }
 	
-	@Override
-	public void visit(FuncCall FuncCall) {
-		Obj functionObj = FuncCall.getDesignator().obj;
-		int offset = functionObj.getAdr() - Code.pc; 
-		Code.put(Code.call);
-		Code.put2(offset);
-	}
+	// @Override
+	// public void visit(FuncCall FuncCall) {
+	// 	Obj functionObj = FuncCall.getDesignator().obj;
+	// 	int offset = functionObj.getAdr() - Code.pc; 
+	// 	Code.put(Code.call);
+	// 	Code.put2(offset);
+	// }
 	
-	@Override
-	public void visit(PrintStmt PrintStmt) {
-		Code.put(Code.const_5);
-		Code.put(Code.print);
-	}
+	// @Override
+	// public void visit(PrintStmt PrintStmt) {
+	// 	Code.put(Code.const_5);
+	// 	Code.put(Code.print);
+	// }
 	
-	@Override
-	public void visit(AddExpr AddExpr) {
-		Code.put(Code.add);
-	}
+	// @Override
+	// public void visit(AddExpr AddExpr) {
+	// 	Code.put(Code.add);
+	// }
 }

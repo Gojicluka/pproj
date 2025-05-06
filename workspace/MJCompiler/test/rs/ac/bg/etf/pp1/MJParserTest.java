@@ -13,7 +13,11 @@ import org.apache.log4j.xml.DOMConfigurator;
 import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.ast.Program;
 import rs.ac.bg.etf.pp1.ast.Type;
+import rs.ac.bg.etf.pp1.SemAnalyzer;
 import rs.ac.bg.etf.pp1.util.Log4JUtils;
+import rs.etf.pp1.symboltable.Tab;
+import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class MJParserTest {
 
@@ -43,17 +47,30 @@ public class MJParserTest {
 	            return;
 	        }
 
-	        Program b = (Program) s.value;
+	        Program prog = (Program) s.value;
 
-	        if (b == null) {
+	        if (prog == null) {
 	            log.error("Parsing failed: Program node is null.");
 	            return;
 	        }
 
-	        log.info(b.toString(""));
+			// Semanticka analiza
+			
+			Tab.init();
+			Struct boolType = new Struct(Struct.Bool);
+			Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", boolType));
+
+			SemAnalyzer sa = new SemAnalyzer();
+			prog.traverseBottomUp(sa);
+
+			log.info("============================================");
+			Tab.dump();
+
+
+	        log.info(prog.toString(""));
 	        log.info("============================================");
 
-	        if (!p.errorDetected) {
+	        if (!p.errorDetected && sa.passed()) {
 	            log.info("Parsing successfully completed!");
 	        } else {
 	            log.error("Parsing failed due to syntax errors.");

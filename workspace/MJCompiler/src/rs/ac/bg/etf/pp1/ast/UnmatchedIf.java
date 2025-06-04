@@ -1,28 +1,28 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/11/2017 14:22:56
+// 8/4/2025 12:59:29
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class UnmatchedIf extends Unmatched {
 
-    private Expr Expr;
+    private Condition Condition;
     private Statement Statement;
 
-    public UnmatchedIf (Expr Expr, Statement Statement) {
-        this.Expr=Expr;
-        if(Expr!=null) Expr.setParent(this);
+    public UnmatchedIf (Condition Condition, Statement Statement) {
+        this.Condition=Condition;
+        if(Condition!=null) Condition.setParent(this);
         this.Statement=Statement;
         if(Statement!=null) Statement.setParent(this);
     }
 
-    public Expr getExpr() {
-        return Expr;
+    public Condition getCondition() {
+        return Condition;
     }
 
-    public void setExpr(Expr Expr) {
-        this.Expr=Expr;
+    public void setCondition(Condition Condition) {
+        this.Condition=Condition;
     }
 
     public Statement getStatement() {
@@ -38,18 +38,18 @@ public class UnmatchedIf extends Unmatched {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if(Expr!=null) Expr.accept(visitor);
+        if(Condition!=null) Condition.accept(visitor);
         if(Statement!=null) Statement.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if(Expr!=null) Expr.traverseTopDown(visitor);
+        if(Condition!=null) Condition.traverseTopDown(visitor);
         if(Statement!=null) Statement.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if(Expr!=null) Expr.traverseBottomUp(visitor);
+        if(Condition!=null) Condition.traverseBottomUp(visitor);
         if(Statement!=null) Statement.traverseBottomUp(visitor);
         accept(visitor);
     }
@@ -59,8 +59,8 @@ public class UnmatchedIf extends Unmatched {
         buffer.append(tab);
         buffer.append("UnmatchedIf(\n");
 
-        if(Expr!=null)
-            buffer.append(Expr.toString("  "+tab));
+        if(Condition!=null)
+            buffer.append(Condition.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");
@@ -76,3 +76,4 @@ public class UnmatchedIf extends Unmatched {
         return buffer.toString();
     }
 }
+

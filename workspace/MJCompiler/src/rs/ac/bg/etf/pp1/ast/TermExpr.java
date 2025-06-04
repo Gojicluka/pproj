@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/11/2017 14:22:56
+// 8/4/2025 12:59:29
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -8,10 +8,13 @@ package rs.ac.bg.etf.pp1.ast;
 public class TermExpr extends Expr {
 
     private Term Term;
+    private AddopTermList AddopTermList;
 
-    public TermExpr (Term Term) {
+    public TermExpr (Term Term, AddopTermList AddopTermList) {
         this.Term=Term;
         if(Term!=null) Term.setParent(this);
+        this.AddopTermList=AddopTermList;
+        if(AddopTermList!=null) AddopTermList.setParent(this);
     }
 
     public Term getTerm() {
@@ -22,21 +25,32 @@ public class TermExpr extends Expr {
         this.Term=Term;
     }
 
+    public AddopTermList getAddopTermList() {
+        return AddopTermList;
+    }
+
+    public void setAddopTermList(AddopTermList AddopTermList) {
+        this.AddopTermList=AddopTermList;
+    }
+
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 
     public void childrenAccept(Visitor visitor) {
         if(Term!=null) Term.accept(visitor);
+        if(AddopTermList!=null) AddopTermList.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
         if(Term!=null) Term.traverseTopDown(visitor);
+        if(AddopTermList!=null) AddopTermList.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
         if(Term!=null) Term.traverseBottomUp(visitor);
+        if(AddopTermList!=null) AddopTermList.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -51,8 +65,15 @@ public class TermExpr extends Expr {
             buffer.append(tab+"  null");
         buffer.append("\n");
 
+        if(AddopTermList!=null)
+            buffer.append(AddopTermList.toString("  "+tab));
+        else
+            buffer.append(tab+"  null");
+        buffer.append("\n");
+
         buffer.append(tab);
         buffer.append(") [TermExpr]");
         return buffer.toString();
     }
 }
+

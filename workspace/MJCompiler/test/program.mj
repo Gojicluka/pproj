@@ -4,6 +4,6 @@ const int pi = 3;
 
 {
 	void main() {
-
+		print(-1);
 	}
 }

@@ -70,11 +70,14 @@ nonterminal Unmatched, Matched;
 nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
 nonterminal MethodSigniture;
 nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList, ConstDeclMore;
-nonterminal VarDeclListOptional, ProgramName;
+nonterminal VarDeclListOptional, ProgramName, ClassNameDeclaration;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
 
 nonterminal Program Program;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Designator, MethodDecl, MethodTypeName; 
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, MethodDecl, MethodTypeName; 
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, VarDeclList; 
 
 
 precedence left PLUS, MINUS;
@@ -271,7 +274,7 @@ Term ::=  (Term_factor) Factor:t
 
 Factor ::= (Factor_const) Constant
             |
-           (Factor_var) Designator:d
+           (Factor_designator) Designator:d
             |
            (Factor_funccall) Designator:func LPAREN ActualPars RPAREN
             |
@@ -330,11 +333,13 @@ Setop ::= (Setop) UNION ;
 
 
 
-ClassDecl ::= (ClassDecl_base) CLASS IDENT ExtendsType LBRACE VarDeclListOptional RBRACE
+ClassDecl ::= (ClassDecl_base) ClassNameDeclaration LBRACE VarDeclListOptional RBRACE
               |
-              (ClassDecl_methodList) CLASS IDENT ExtendsType LBRACE VarDeclListOptional
+              (ClassDecl_methodList) ClassNameDeclaration LBRACE VarDeclListOptional
                     LBRACE MethodDeclList RBRACE RBRACE
             ;
+
+ClassNameDeclaration ::= (ClassNameDeclaration) CLASS IDENT ExtendsType;
 
 ExtendsType ::= (ExtendsType_base) EXTENDS Type
                 |

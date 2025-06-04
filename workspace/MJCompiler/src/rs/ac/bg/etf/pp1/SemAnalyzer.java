@@ -17,6 +17,8 @@ public class SemAnalyzer extends VisitorAdaptor {
     private int constant = 0;
     private Struct constantType = null;
     private Obj currentMethod = null;
+    private boolean hasMain = false;
+    private Obj currentClass = null;
 
     private Struct boolType = Tab.find("bool").getType();
 
@@ -50,6 +52,10 @@ public class SemAnalyzer extends VisitorAdaptor {
         Tab.chainLocalSymbols(currentProgram);
         Tab.closeScope();
         currentProgram = null;
+
+        if(!hasMain){
+            report_error("Program must have a main method", program);
+        }
     }
 
     @Override 
@@ -111,14 +117,20 @@ public class SemAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(VarDecl_regular varDecl) {
         Obj varObj = null;
-        if(currentMethod == null){
+        if(currentMethod == null && currentClass == null){
             varObj = Tab.find(varDecl.getI1());
         }else{
             varObj = Tab.currentScope().findSymbol(varDecl.getI1());
         }
 
         if(varObj == null || varObj == Tab.noObj) {
-            varObj = Tab.insert(Obj.Var, varDecl.getI1(), currentType);
+            if(currentClass == null){
+                varObj = Tab.insert(Obj.Var, varDecl.getI1(), currentType);
+            }else{
+                varObj = Tab.insert(Obj.Var, varDecl.getI1(), currentType);
+                varObj.setLevel(2);
+            }
+
            
         } else{
             report_error("Variable " + varDecl.getI1() + " is already defined", varDecl);
@@ -128,14 +140,20 @@ public class SemAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(VarDecl_array varDecl) {
         Obj varObj = null;
-        if(currentMethod == null){
+        if(currentMethod == null && currentClass == null){
             varObj = Tab.find(varDecl.getI1());
         }else{
             varObj = Tab.currentScope().findSymbol(varDecl.getI1());
         }
 
         if(varObj == null || varObj == Tab.noObj) {
-            varObj = Tab.insert(Obj.Var, varDecl.getI1(), new Struct(Struct.Array, currentType));
+            if(currentClass == null){
+                varObj = Tab.insert(Obj.Var, varDecl.getI1(), new Struct(Struct.Array, currentType));
+            }else{
+                varObj = Tab.insert(Obj.Var, varDecl.getI1(), new Struct(Struct.Array, currentType));
+                varObj.setLevel(2);
+            }
+            
         } else{
             report_error("Variable " + varDecl.getI1() + " is already defined", varDecl);
         }
@@ -156,6 +174,10 @@ public class SemAnalyzer extends VisitorAdaptor {
 
     @Override
     public void visit(MethodSigniture_Void methodSigniture){
+        if(methodSigniture.getI1().equalsIgnoreCase("main")){
+            hasMain = true;
+        }
+
         Obj methodObj = Tab.find(methodSigniture.getI1());
         if(methodObj != Tab.noObj) {
             report_error("Method " + methodSigniture.getI1() + " is already defined", methodSigniture);
@@ -170,5 +192,169 @@ public class SemAnalyzer extends VisitorAdaptor {
         Tab.chainLocalSymbols(currentMethod);
         Tab.closeScope();
         currentMethod = null;
+    }
+
+    // ====================Form parameters====================
+
+    @Override
+    public void visit(FormalParamDecl_base formalParamDecl) {
+        Obj varObj = null;
+        if(currentMethod == null){
+            report_error("Formal parameter " + formalParamDecl.getI2() + " is not defined", formalParamDecl);
+        }else{
+            varObj = Tab.currentScope().findSymbol(formalParamDecl.getI2());
+        }
+
+        if(varObj ==null || varObj == Tab.noObj){
+            varObj = Tab.insert(Obj.Var, formalParamDecl.getI2(), currentType);
+            varObj.setFpPos(1);
+            currentMethod.setLevel(currentMethod.getLevel());
+        }
+        else{
+            report_error("Formal parameter " + formalParamDecl.getI2() + " is already defined", formalParamDecl);
+        }
+    }
+
+    @Override
+    public void visit(FormalParamDecl_brakcet formalParamDecl) {
+        Obj varObj = null;
+        if(currentMethod == null){
+            report_error("Formal parameter " + formalParamDecl.getI2() + " is not defined", formalParamDecl);
+        }else{
+            varObj = Tab.currentScope().findSymbol(formalParamDecl.getI2());
+        }
+
+        if(varObj ==null || varObj == Tab.noObj){
+            varObj = Tab.insert(Obj.Var, formalParamDecl.getI2(), new Struct(Struct.Array, currentType));
+            varObj.setFpPos(1);
+            currentMethod.setLevel(currentMethod.getLevel());
+        }
+        else{
+            report_error("Formal parameter " + formalParamDecl.getI2() + " is already defined", formalParamDecl);
+        }
+    }
+
+    // ====================Class declarations====================
+
+    @Override
+    public void visit(ClassNameDeclaration classDecl) {
+        Obj classObj = Tab.find(classDecl.getI1());
+        if(classObj != Tab.noObj) {
+            report_error("Class " + classDecl.getI1() + " is already defined", classDecl);
+        } else{
+            Struct struct = new Struct(Struct.Class);
+            currentClass = Tab.insert(Obj.Type, classDecl.getI1(), struct);
+            Tab.openScope();
+        }
+    }
+
+    @Override
+    public void visit(ClassDecl_base classDecl){
+        Tab.chainLocalSymbols(currentClass);
+        Tab.closeScope();
+        currentClass = null;
+    }
+
+    @Override
+    public void visit(ClassDecl_methodList classDecl){
+        Tab.chainLocalSymbols(currentClass);
+        Tab.closeScope();
+        currentClass = null;
+    }
+
+    // Context conditisions
+
+    @Override
+    public void visit(Factor_const f){
+        f.struct = constantType;
+    }
+
+    @Override 
+    public void visit(Term_factor term){
+        term.struct = term.getFactor().struct;
+    }
+
+    @Override
+    public void visit(Term_mulop mulop){
+        Struct t = mulop.getFactor().struct;
+        if (t == Tab.intType){
+            mulop.struct = t;
+        }else{
+            report_error("Operator " + mulop.getMulop().toString() + " cannot be applied to type " + t.getKind(), mulop);
+            mulop.struct = Tab.noType;
+        }
+    }
+
+    @Override
+    public void visit(UnaryMinusExpr expr){
+        Struct t = expr.getTerm().struct;
+        if (t == Tab.intType){
+            expr.struct = t;
+        }
+        else{
+            report_error("Unary minus cannot be applied to type " + t.getKind(), expr);
+            expr.struct = Tab.noType;
+        }
+    }
+
+    @Override
+    public void visit(Factor_designator fd){
+        fd.struct = fd.getDesignator().obj.getType();
+    }
+
+    @Override
+    public void visit(Factor_NewType_Epxr factor){
+        if(factor.getExpr().struct.equals(Tab.intType)){
+            factor.struct = new Struct(Struct.Array, currentType);
+        }else{
+            report_error("Array size must be an integer", factor);
+            factor.struct = Tab.noType;
+        }
+    }
+
+    @Override
+    public void visit(Factor_Expr factor){
+        factor.struct = factor.getExpr().struct;
+    }
+
+    // ====================Designator====================
+
+    @Override
+    public void visit(SimpleDesignator sd){
+        Obj varObj = Tab.find(sd.getName());
+
+        if(varObj == Tab.noObj){
+            report_error("Variable " + sd.getName() + " is not defined", sd);
+           sd.obj = Tab.noObj;
+        }else if(varObj.getKind() != Obj.Var && varObj.getKind() != Obj.Con){
+            report_error("Variable " + sd.getName() + " is not a variable", sd);
+            sd.obj = Tab.noObj;
+        } 
+        else {
+            sd.obj = varObj;
+        }
+    }
+
+    @Override
+    public void visit(FieldAccess field_designator){
+        // TODO
+    }
+
+    @Override
+    public void visit(ArrayAccess array_designator){
+        // TODO POTREBNO JE VIDETI KAKO KLASE FUNKCIONISU
+        
+        // Obj varObj = Tab.find(array_designator.getDesignator());
+
+        // if(varObj == Tab.noObj){
+        //     report_error("Variable " + sd.getName() + " is not defined", sd);
+        //    sd.obj = Tab.noObj;
+        // }else if(varObj.getKind() != Obj.Var && varObj.getKind() != Obj.Con){
+        //     report_error("Variable " + sd.getName() + " is not a variable", sd);
+        //     sd.obj = Tab.noObj;
+        // } 
+        // else {
+        //     sd.obj = varObj;
+        // }
     }
 }

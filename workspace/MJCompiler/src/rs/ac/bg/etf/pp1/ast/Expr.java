@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/11/2017 14:22:56
+// 8/4/2025 12:59:29
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -37,3 +37,4 @@ public abstract class Expr implements SyntaxNode {
     public String toString() { return toString(""); }
     public abstract String toString(String tab);
 }
+

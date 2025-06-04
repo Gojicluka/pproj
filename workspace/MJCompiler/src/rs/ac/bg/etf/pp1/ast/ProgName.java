@@ -1,29 +1,17 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/11/2017 14:22:55
+// 8/4/2025 12:59:29
 
 
 package rs.ac.bg.etf.pp1.ast;
 
-public class ProgName implements SyntaxNode {
+public abstract class ProgName implements SyntaxNode {
 
     private SyntaxNode parent;
+
     private int line;
+
     public rs.etf.pp1.symboltable.concepts.Obj obj = null;
-
-    private String pName;
-
-    public ProgName (String pName) {
-        this.pName=pName;
-    }
-
-    public String getPName() {
-        return pName;
-    }
-
-    public void setPName(String pName) {
-        this.pName=pName;
-    }
 
     public SyntaxNode getParent() {
         return parent;
@@ -41,31 +29,12 @@ public class ProgName implements SyntaxNode {
         this.line=line;
     }
 
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
+    public abstract void accept(Visitor visitor);
+    public abstract void childrenAccept(Visitor visitor);
+    public abstract void traverseTopDown(Visitor visitor);
+    public abstract void traverseBottomUp(Visitor visitor);
 
-    public void childrenAccept(Visitor visitor) {
-    }
-
-    public void traverseTopDown(Visitor visitor) {
-        accept(visitor);
-    }
-
-    public void traverseBottomUp(Visitor visitor) {
-        accept(visitor);
-    }
-
-    public String toString(String tab) {
-        StringBuffer buffer=new StringBuffer();
-        buffer.append(tab);
-        buffer.append("ProgName(\n");
-
-        buffer.append(" "+tab+pName);
-        buffer.append("\n");
-
-        buffer.append(tab);
-        buffer.append(") [ProgName]");
-        return buffer.toString();
-    }
+    public String toString() { return toString(""); }
+    public abstract String toString(String tab);
 }
+

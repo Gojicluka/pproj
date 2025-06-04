@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/11/2017 14:22:55
+// 8/4/2025 12:59:29
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -35,3 +35,4 @@ public class NoMethodDecl extends MethodDeclList {
         return buffer.toString();
     }
 }
+

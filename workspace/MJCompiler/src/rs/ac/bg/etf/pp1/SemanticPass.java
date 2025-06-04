@@ -51,21 +51,21 @@ public class SemanticPass extends VisitorAdaptor {
 		log.info(msg.toString());
 	}
 	
-	public void visit(Program program) {		
-		nVars = Tab.currentScope.getnVars();
-		Tab.chainLocalSymbols(program.getProgName().obj);
-		Tab.closeScope();
-	}
+	// public void visit(Program program) {		
+	// 	nVars = Tab.currentScope.getnVars();
+	// 	Tab.chainLocalSymbols(program.getProgName().obj);
+	// 	Tab.closeScope();
+	// }
 
-	public void visit(ProgName progName) {
-		progName.obj = Tab.insert(Obj.Prog, progName.getPName(), Tab.noType);
-		Tab.openScope();     	
-	}
+	// public void visit(ProgName progName) {
+	// 	progName.obj = Tab.insert(Obj.Prog, progName.getPName(), Tab.noType);
+	// 	Tab.openScope();     	
+	// }
 
-	public void visit(VarDecl varDecl) {
-		report_info("Deklarisana promenljiva "+ varDecl.getVarName(), varDecl);
-		Obj varNode = Tab.insert(Obj.Var, varDecl.getVarName(), varDecl.getType().struct);
-	}
+	// public void visit(VarDecl varDecl) {
+	// 	report_info("Deklarisana promenljiva "+ varDecl.getVarName(), varDecl);
+	// 	Obj varNode = Tab.insert(Obj.Var, varDecl.getVarName(), varDecl.getType().struct);
+	// }
 
 	public void visit(Type type) {
 		Obj typeNode = Tab.find(type.getTypeName());
@@ -147,42 +147,42 @@ public class SemanticPass extends VisitorAdaptor {
 		termExpr.struct = termExpr.getTerm().struct;
 	}
 
-	public void visit(Term term) {
-		term.struct = term.getFactor().struct;    	
-	}
+	// public void visit(Term term) {
+	// 	term.struct = term.getFactor().struct;    	
+	// }
 
-	public void visit(Const cnst){
-		cnst.struct = Tab.intType;    	
-	}
+	// public void visit(Const cnst){
+	// 	cnst.struct = Tab.intType;    	
+	// }
 	
-	public void visit(Var var) {
-		var.struct = var.getDesignator().obj.getType();
-	}
+	// public void visit(Var var) {
+	// 	var.struct = var.getDesignator().obj.getType();
+	// }
 
-	public void visit(FuncCall funcCall){
-		Obj func = funcCall.getDesignator().obj;
-		if (Obj.Meth == func.getKind()) { 
-			report_info("Pronadjen poziv funkcije " + func.getName() + " na liniji " + funcCall.getLine(), null);
-			funcCall.struct = func.getType();
-		} 
-		else {
-			report_error("Greska na liniji " + funcCall.getLine()+" : ime " + func.getName() + " nije funkcija!", null);
-			funcCall.struct = Tab.noType;
-		}
+	// public void visit(FuncCall funcCall){
+	// 	Obj func = funcCall.getDesignator().obj;
+	// 	if (Obj.Meth == func.getKind()) { 
+	// 		report_info("Pronadjen poziv funkcije " + func.getName() + " na liniji " + funcCall.getLine(), null);
+	// 		funcCall.struct = func.getType();
+	// 	} 
+	// 	else {
+	// 		report_error("Greska na liniji " + funcCall.getLine()+" : ime " + func.getName() + " nije funkcija!", null);
+	// 		funcCall.struct = Tab.noType;
+	// 	}
 
-	}
+	// }
 
-	public void visit(Designator designator){
-		Obj obj = Tab.find(designator.getName());
-		if (obj == Tab.noObj) { 
-			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
-		}
-		designator.obj = obj;
-	}
+	// public void visit(Designator designator){
+	// 	Obj obj = Tab.find(designator.getName());
+	// 	if (obj == Tab.noObj) { 
+	// 		report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
+	// 	}
+	// 	designator.obj = obj;
+	// }
 	
-	public boolean passed() {
-		return !errorDetected;
-	}
+	// public boolean passed() {
+	// 	return !errorDetected;
+	// }
 	
 }
 

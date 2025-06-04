@@ -56,12 +56,12 @@ terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, COMMA, PRINT, RETURN, PLUS,
 terminal Integer NUMBER;
 terminal String IDENT;
 terminal Boolean BOOL;
-terminal Character CHARACTER;
+terminal Character CHAR;
 terminal IF, ELSE;
 
 terminal NOT_EQUALS, GREATER, GREATER_EQUALS, LESS, LESS_EQUALS, AND, OR, INCREMENT, DECREMENT, COLON, DOT, LBRACKET, RBRACKET;
 terminal CONTINUE, BREAK, CLASS, DO, EXTENDS, INTERFACE, MAP, NEW, READ, UNION, WHILE;
-terminal CHAR, MINUS, DIV, EQUALS, MOD, MUL;
+terminal MINUS, DIV, EQUALS, MOD, MUL;
 
 nonterminal MethodDeclList MethodDeclList;
 nonterminal Constant Constant;
@@ -97,12 +97,17 @@ nonterminal InterfaceDecl InterfaceDecl;
 nonterminal ProgramDecl ProgramDecl;
 nonterminal ConstDecl ConstDecl;
 nonterminal ConstDeclList ConstDeclList;
-nonterminal VarDeclarations VarDeclarations;
+nonterminal ConstDeclMore ConstDeclMore;
+nonterminal VarDeclListOptional VarDeclListOptional;
 nonterminal ProgramName ProgramName;
+nonterminal ClassNameDeclaration ClassNameDeclaration;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
 
 nonterminal Program Program;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Designator, MethodDecl, MethodTypeName; 
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, MethodDecl, MethodTypeName; 
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, VarDeclList; 
 
 
 precedence left PLUS, MINUS;
@@ -117,7 +122,7 @@ Program ::= (Program) PROG ProgramName:P1 ProgramDecl:P2 LBRACE MethodDeclList:M
 ProgramName ::= (ProgramName) IDENT:I1 {: RESULT=new ProgramName(I1); RESULT.setLine(I1left); :}
 ;
 
-ProgramDecl ::= (ProgramDecl_Const) ProgramDecl:P1 ConstDecl:C2 {: RESULT=new ProgramDecl_Const(P1, C2); RESULT.setLine(P1left); :}
+ProgramDecl ::= (ProgramDecl_Const) ProgramDecl:P1 ConstDeclList:C2 {: RESULT=new ProgramDecl_Const(P1, C2); RESULT.setLine(P1left); :}
                 |
                 (ProgramDecl_var) ProgramDecl:P1 VarDecl:V2 {: RESULT=new ProgramDecl_var(P1, V2); RESULT.setLine(P1left); :}
                 |
@@ -128,35 +133,38 @@ ProgramDecl ::= (ProgramDecl_Const) ProgramDecl:P1 ConstDecl:C2 {: RESULT=new Pr
                 (ProgramDecl_epsilon) {: RESULT=new ProgramDecl_epsilon(); :} /* epsilon */
                 ;
 
+VarDeclListOptional ::= (VarDeclListOptional_list) VarDeclList:V1 {: RESULT=new VarDeclListOptional_list(V1); RESULT.setLine(V1left); :}
+                        |
+                        (VarDeclListOptional_epsilon) {: RESULT=new VarDeclListOptional_epsilon(); :} /* epsilon */
+;
 
-VarDecl ::= (VarDecl_base) Type:T1 IDENT:I2 VarDeclList:V3 SEMI {: RESULT=new VarDecl_base(T1, I2, V3); RESULT.setLine(T1left); :}
+VarDeclList ::= (VarDeclList) Type:T1 VarDecl:V2 VarDeclMore:V3 SEMI {: RESULT=new VarDeclList(T1, V2, V3); RESULT.setLine(T1left); :};
+
+VarDecl ::= (VarDecl_regular) IDENT:I1 {: RESULT=new VarDecl_regular(I1); RESULT.setLine(I1left); :} 
             |
-            (VarDecl_brackets) Type:T1 IDENT:I2 LBRACKET RBRACKET VarDeclList:V3 SEMI {: RESULT=new VarDecl_brackets(T1, I2, V3); RESULT.setLine(T1left); :}
+            (VarDecl_array) IDENT:I1 LBRACKET RBRACKET {: RESULT=new VarDecl_array(I1); RESULT.setLine(I1left); :}
 ;
 
-VarDeclList ::= (VarDeclList_base) VarDeclList:V1 COMMA IDENT:I2 {: RESULT=new VarDeclList_base(V1, I2); RESULT.setLine(V1left); :}
+VarDeclMore ::= (VarDeclMore_comma) COMMA VarDecl:V1 VarDeclMore:V2 {: RESULT=new VarDeclMore_comma(V1, V2); RESULT.setLine(V1left); :}
                 |
-                (VarDeclList_bracket) VarDeclList:V1 COMMA IDENT:I2 LBRACKET RBRACKET {: RESULT=new VarDeclList_bracket(V1, I2); RESULT.setLine(V1left); :}
-                |
-                (VarDeclList_epsilon) {: RESULT=new VarDeclList_epsilon(); :} /* epsilon */
+                (VarDeclMore_e) {: RESULT=new VarDeclMore_e(); :} /* epsilon */
 ;
 
-VarDeclarations ::= (VarDeclarations_base) VarDeclarations:V1 VarDecl:V2 {: RESULT=new VarDeclarations_base(V1, V2); RESULT.setLine(V1left); :}
-                    |
-                    (VarDeclarations_epsilon) {: RESULT=new VarDeclarations_epsilon(); :} /* epsilon */
-                    ;
 
 
-ConstDecl ::= (ConstDecl_base) CONST Type:T1 IDENT:I2 EQUAL Constant:C3 ConstDeclList:C4 SEMI {: RESULT=new ConstDecl_base(T1, I2, C3, C4); RESULT.setLine(T1left); :};
 
-ConstDeclList ::= (ConstDeclList_base) COMMA IDENT:I1 EQUAL Constant:C2 {: RESULT=new ConstDeclList_base(I1, C2); RESULT.setLine(I1left); :}
+ConstDeclList ::= (ConstDeclList) CONST Type:T1 ConstDecl:C2 ConstDeclMore:C3 SEMI {: RESULT=new ConstDeclList(T1, C2, C3); RESULT.setLine(T1left); :};
+
+ConstDecl ::= (ConstDecl) IDENT:I1 EQUAL Constant:C2 {: RESULT=new ConstDecl(I1, C2); RESULT.setLine(I1left); :};
+
+ConstDeclMore ::= (ConstDeclMore_base) COMMA ConstDecl:C1 ConstDeclMore:C2 {: RESULT=new ConstDeclMore_base(C1, C2); RESULT.setLine(C1left); :}
                 |
-                (ConstDeclList_epsilon) {: RESULT=new ConstDeclList_epsilon(); :} /* epsilon */
+                (ConstDeclMore_epsilon) {: RESULT=new ConstDeclMore_epsilon(); :} /* epsilon */
 ;
 
 Constant ::= (Constant_number) NUMBER:N1 {: RESULT=new Constant_number(N1); RESULT.setLine(N1left); :}
             |
-            (Constant_character) CHAR {: RESULT=new Constant_character(); :}
+            (Constant_character) CHAR:C1 {: RESULT=new Constant_character(C1); RESULT.setLine(C1left); :}
             |
             (Constant_boolean) BOOL:B1 {: RESULT=new Constant_boolean(B1); RESULT.setLine(B1left); :}
 ;
@@ -169,14 +177,14 @@ MethodDeclList ::= (MethodDeclarations) MethodDeclList:M1 MethodDecl:M2 {: RESUL
                     (NoMethodDecl) {: RESULT=new NoMethodDecl(); :}/* epsilon */
                     ;
 
-MethodDecl ::= (MethodDecl) MethodSigniture:M1 VarDeclarations:V2 LBRACE StatementList:S3 RBRACE {: RESULT=new MethodDecl(M1, V2, S3); RESULT.setLine(M1left); :};
+MethodDecl ::= (MethodDecl) MethodSigniture:M1 VarDeclListOptional:V2 LBRACE StatementList:S3 RBRACE {: RESULT=new MethodDecl(M1, V2, S3); RESULT.setLine(M1left); :};
 
 MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName {: RESULT=new MethodTypeName(retType, methName); RESULT.setLine(retTypeleft); :}
 ;
 
-MethodSigniture ::= (MethodSigniture_Type_FormPars) Type:T1 IDENT:I2 LPAREN FormPars:F3 RPAREN {: RESULT=new MethodSigniture_Type_FormPars(T1, I2, F3); RESULT.setLine(T1left); :}
+MethodSigniture ::= (MethodSigniture_Type) Type:T1 IDENT:I2 LPAREN FormPars:F3 RPAREN {: RESULT=new MethodSigniture_Type(T1, I2, F3); RESULT.setLine(T1left); :}
                     |
-                    (MethodSigniture_Void_FormPars) VOID IDENT:I1 LPAREN FormPars:F2 RPAREN {: RESULT=new MethodSigniture_Void_FormPars(I1, F2); RESULT.setLine(I1left); :}
+                    (MethodSigniture_Void) VOID IDENT:I1 LPAREN FormPars:F2 RPAREN {: RESULT=new MethodSigniture_Void(I1, F2); RESULT.setLine(I1left); :}
 ;
 
 
@@ -296,7 +304,7 @@ Term ::=  (Term_factor) Factor:t {: RESULT=new Term_factor(t); RESULT.setLine(tl
 
 Factor ::= (Factor_const) Constant:C1 {: RESULT=new Factor_const(C1); RESULT.setLine(C1left); :}
             |
-           (Factor_var) Designator:d {: RESULT=new Factor_var(d); RESULT.setLine(dleft); :}
+           (Factor_designator) Designator:d {: RESULT=new Factor_designator(d); RESULT.setLine(dleft); :}
             |
            (Factor_funccall) Designator:func LPAREN ActualPars:A1 RPAREN {: RESULT=new Factor_funccall(func, A1); RESULT.setLine(funcleft); :}
             |
@@ -355,11 +363,13 @@ Setop ::= (Setop) UNION {: RESULT=new Setop(); :} ;
 
 
 
-ClassDecl ::= (ClassDecl_base) CLASS IDENT:I1 ExtendsType:E2 LBRACE VarDeclarations:V3 RBRACE {: RESULT=new ClassDecl_base(I1, E2, V3); RESULT.setLine(I1left); :}
+ClassDecl ::= (ClassDecl_base) ClassNameDeclaration:C1 LBRACE VarDeclListOptional:V2 RBRACE {: RESULT=new ClassDecl_base(C1, V2); RESULT.setLine(C1left); :}
               |
-              (ClassDecl_methodList) CLASS IDENT:I1 ExtendsType:E2 LBRACE VarDeclarations:V3
-                    LBRACE MethodDeclList:M4 RBRACE RBRACE {: RESULT=new ClassDecl_methodList(I1, E2, V3, M4); RESULT.setLine(I1left); :}
+              (ClassDecl_methodList) ClassNameDeclaration:C1 LBRACE VarDeclListOptional:V2
+                    LBRACE MethodDeclList:M3 RBRACE RBRACE {: RESULT=new ClassDecl_methodList(C1, V2, M3); RESULT.setLine(C1left); :}
             ;
+
+ClassNameDeclaration ::= (ClassNameDeclaration) CLASS IDENT:I1 ExtendsType:E2 {: RESULT=new ClassNameDeclaration(I1, E2); RESULT.setLine(I1left); :};
 
 ExtendsType ::= (ExtendsType_base) EXTENDS Type:T1 {: RESULT=new ExtendsType_base(T1); RESULT.setLine(T1left); :}
                 |

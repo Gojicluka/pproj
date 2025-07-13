@@ -160,30 +160,34 @@ public class SemAnalyzer extends VisitorAdaptor {
     }
 
     // ====================Method declarations====================
+    // @Override
+    // public void visit(MethodSigniture_Type methodSignature) {
+    //     Obj methodObj = Tab.find(methodSignature.getI2());
+    //     if(methodObj != Tab.noObj) {
+    //         report_error("Method " + methodSignature.getI2() + " is already defined", methodSignature);
+    //     } else{
+    //         if(currentType == null) currentType = Tab.noType;
+    //         currentMethod =  Tab.insert(Obj.Meth, methodSignature.getI2(), currentType);
+    //         Tab.openScope();
+    //     }
+    // }
+
     @Override
-    public void visit(MethodSigniture_Type methodSignature) {
-        Obj methodObj = Tab.find(methodSignature.getI2());
+    public void visit(MethodName methodName){
+        Obj methodObj = Tab.find(methodName.getMethodname());
         if(methodObj != Tab.noObj) {
-            report_error("Method " + methodSignature.getI2() + " is already defined", methodSignature);
+            report_error("Method " + methodName.getMethodname() + " is already defined", methodName);
         } else{
             if(currentType == null) currentType = Tab.noType;
-            currentMethod =  Tab.insert(Obj.Meth, methodSignature.getI2(), currentType);
+            currentMethod =  Tab.insert(Obj.Meth, methodName.getMethodname(), currentType);
             Tab.openScope();
         }
     }
 
     @Override
     public void visit(MethodSigniture_Void methodSigniture){
-        if(methodSigniture.getI1().equalsIgnoreCase("main")){
+        if(methodSigniture.getMethodName().getMethodname().equalsIgnoreCase("main")){
             hasMain = true;
-        }
-
-        Obj methodObj = Tab.find(methodSigniture.getI1());
-        if(methodObj != Tab.noObj) {
-            report_error("Method " + methodSigniture.getI1() + " is already defined", methodSigniture);
-        } else{
-            currentMethod =  Tab.insert(Obj.Meth, methodSigniture.getI1(), Tab.noType);
-            Tab.openScope();
         }
     }
 
@@ -245,6 +249,10 @@ public class SemAnalyzer extends VisitorAdaptor {
             Struct struct = new Struct(Struct.Class);
             currentClass = Tab.insert(Obj.Type, classDecl.getI1(), struct);
             Tab.openScope();
+            
+            // Add "this" to symbol table for class context
+            Obj thisObj = Tab.insert(Obj.Var, "this", currentClass.getType());
+            thisObj.setLevel(0); // "this" reference level
         }
     }
 
@@ -326,7 +334,7 @@ public class SemAnalyzer extends VisitorAdaptor {
         if(varObj == Tab.noObj){
             report_error("Variable " + sd.getName() + " is not defined", sd);
            sd.obj = Tab.noObj;
-        }else if(varObj.getKind() != Obj.Var && varObj.getKind() != Obj.Con){
+        }else if(varObj.getKind() != Obj.Var && varObj.getKind() != Obj.Con && varObj.getKind() != Obj.Meth){
             report_error("Variable " + sd.getName() + " is not a variable", sd);
             sd.obj = Tab.noObj;
         } 
@@ -337,24 +345,28 @@ public class SemAnalyzer extends VisitorAdaptor {
 
     @Override
     public void visit(FieldAccess field_designator){
-        // TODO
+        // TODO 
     }
 
     @Override
-    public void visit(ArrayAccess array_designator){
-        // TODO POTREBNO JE VIDETI KAKO KLASE FUNKCIONISU
-        
-        // Obj varObj = Tab.find(array_designator.getDesignator());
+    public void visit(ArrayAccess designator){
+        if(designator.getDesignator().obj.getType().getKind() != Struct.Array) {
+			report_error("Variable must be an array.", null);
+			designator.obj = Tab.noObj;
+			return;
+		}
 
-        // if(varObj == Tab.noObj){
-        //     report_error("Variable " + sd.getName() + " is not defined", sd);
-        //    sd.obj = Tab.noObj;
-        // }else if(varObj.getKind() != Obj.Var && varObj.getKind() != Obj.Con){
-        //     report_error("Variable " + sd.getName() + " is not a variable", sd);
-        //     sd.obj = Tab.noObj;
-        // } 
-        // else {
-        //     sd.obj = varObj;
-        // }
+        if(designator.getExpr().struct != Tab.intType) {
+			report_error("Size should be an integer.", null);
+			designator.obj = Tab.noObj;
+			return;
+		}
+
+        designator.obj = Tab.insert(
+            Obj.Elem, designator.getDesignator().obj.getName(), 
+            designator.getDesignator().obj.getType().getElemType()
+        );
     }
+
+    // Expr
 }

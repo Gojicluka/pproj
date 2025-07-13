@@ -70,14 +70,14 @@ nonterminal Unmatched, Matched;
 nonterminal Label, Assignop, Mulop, Setop, Relop, AddopTerm, AddopTermList, CondFact, CondTerm, Condition, ActPars, DesignatorStatement;
 nonterminal MethodSigniture;
 nonterminal ClassDecl, ExtendsType, InterfaceMethodList, InterfaceDecl, ProgramDecl, ConstDecl, ConstDeclList, ConstDeclMore;
-nonterminal VarDeclListOptional, ProgramName, ClassNameDeclaration;
+nonterminal VarDeclListOptional, ProgramName, ClassNameDeclaration, MethodName;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
 
 nonterminal Program Program;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, MethodDecl, MethodTypeName; 
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, VarDeclList; 
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, VarDeclList, VarDeclComma; 
 
 
 precedence left PLUS, MINUS;
@@ -94,7 +94,7 @@ ProgramName ::= (ProgramName) IDENT
 
 ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDeclList
                 |
-                (ProgramDecl_var) ProgramDecl VarDecl
+                (ProgramDecl_var) ProgramDecl VarDeclComma
                 |
                 (PgoramDecl_class) ProgramDecl ClassDecl
                 |
@@ -103,12 +103,12 @@ ProgramDecl ::= (ProgramDecl_Const) ProgramDecl ConstDeclList
                 (ProgramDecl_epsilon) /* epsilon */
                 ;
 
-VarDeclListOptional ::= (VarDeclListOptional_list) VarDeclList
+VarDeclListOptional ::= (VarDeclListOptional_list) VarDeclListOptional VarDeclComma
                         |
                         (VarDeclListOptional_epsilon) /* epsilon */
 ;
 
-VarDeclList ::= (VarDeclList) Type VarDecl VarDeclMore SEMI;
+VarDeclComma ::= (VarDeclComma) Type VarDecl VarDeclMore SEMI;
 
 VarDecl ::= (VarDecl_regular) IDENT 
             |
@@ -152,10 +152,12 @@ MethodDecl ::= (MethodDecl) MethodSigniture VarDeclListOptional LBRACE Statement
 MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName
 ;
 
-MethodSigniture ::= (MethodSigniture_Type) Type IDENT LPAREN FormPars RPAREN
+MethodSigniture ::= (MethodSigniture_Type) Type MethodName LPAREN FormPars RPAREN
                     |
-                    (MethodSigniture_Void) VOID IDENT LPAREN FormPars RPAREN
+                    (MethodSigniture_Void) VOID MethodName LPAREN FormPars RPAREN
 ;
+
+MethodName ::= (MethodName) IDENT:methodname;
 
 
 FormPars ::= (FormParams) FormalParamList 
@@ -184,7 +186,8 @@ Unmatched ::=   (UnmatchedIf) IF LPAREN Condition RPAREN Statement
                 (UnmatchedIfElse) IF LPAREN Condition RPAREN Matched ELSE Unmatched;
     
                   
-Matched ::= (ErrAssignment) Designator EQUAL error SEMI
+Matched ::= (ErrAssignment) Designator EQUAL error:e SEMI
+         /*   {: parser.report_error("Oporavak od greske u matched statementu. Linija: "+eleft, null); :} */
               |
               (ReturnExpr) RETURN Expr:t SEMI
               |
@@ -296,8 +299,8 @@ ActualParamList ::= (ActualParams) ActualParamList COMMA Expr
                     ;
 
 Designator ::= (SimpleDesignator) IDENT:name
-             | (FieldAccess) Designator DOT IDENT:field
-             | (ArrayAccess) Designator LBRACKET Expr:index RBRACKET
+             | (FieldAccess) Designator:fieldDesignator DOT IDENT:field
+             | (ArrayAccess) Designator:arrayDesignator LBRACKET Expr:index RBRACKET
              ;
 
 Label ::= (Label) IDENT ;
